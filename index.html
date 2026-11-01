@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Финансовый Калькулятор (Логарифмы)</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 24px;
+            margin-bottom: 25px;
+        }
+        .tabs {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            background: none;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            color: #7f8c8d;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        .tab-btn.active {
+            color: #2980b9;
+            border-bottom: 3px solid #2980b9;
+        }
+        .calc-panel {
+            display: none;
+        }
+        .calc-panel.active {
+            display: block;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        button.calc-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #2980b9;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 10px;
+        }
+        button.calc-btn:hover {
+            background-color: #3498db;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            font-weight: 600;
+            display: none;
+        }
+        .success {
+            background-color: #e8f8f5;
+            color: #27ae60;
+            border: 1px solid #2ecc71;
+        }
+        .error {
+            background-color: #fdebd0;
+            color: #e67e22;
+            border: 1px solid #f39c12;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Логарифмический калькулятор</h1>
+    
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab(0)">Рост капитала</button>
+        <button class="tab-btn" onclick="switchTab(1)">Выплата кредита</button>
+        <button class="tab-btn" onclick="switchTab(2)">Непрерывный %</button>
+    </div>
+
+    <!-- Панель 1: Рост капитала -->
+    <div id="panel-0" class="calc-panel active">
+        <div class="input-group">
+            <label>Начальный капитал ($ / руб):</label>
+            <input type="number" id="cap-init" value="100000" min="1">
+        </div>
+        <div class="input-group">
+            <label>Целевая сумма ($ / руб):</label>
+            <input type="number" id="cap-target" value="200000" min="1">
+        </div>
+        <div class="input-group">
+            <label>Годовая ставка (%):</label>
+            <input type="number" id="cap-rate" value="10" step="0.1" min="0.1">
+        </div>
+        <button class="calc-btn" onclick="calcCapital()">Рассчитать время</button>
+        <div id="res-0" class="result"></div>
+    </div>
+
+    <!-- Панель 2: Выплата кредита -->
+    <div id="panel-1" class="calc-panel">
+        <div class="input-group">
+            <label>Сумма кредита ($ / руб):</label>
+            <input type="number" id="loan-amount" value="500000" min="1">
+        </div>
+        <div class="input-group">
+            <label>Ежемесячный платеж ($ / руб):</label>
+            <input type="number" id="loan-payment" value="15000" min="1">
+        </div>
+        <div class="input-group">
+            <label>Годовая ставка кредита (%):</label>
+            <input type="number" id="loan-rate" value="12" step="0.1" min="0.1">
+        </div>
+        <button class="calc-btn" onclick="calcLoan()">Рассчитать время</button>
+        <div id="res-1" class="result"></div>
+    </div>
+
+    <!-- Панель 3: Непрерывный процент -->
+    <div id="panel-2" class="calc-panel">
+        <div class="input-group">
+            <label>Начальный капитал ($ / руб):</label>
+            <input type="number" id="cont-init" value="100000" min="1">
+        </div>
+        <div class="input-group">
+            <label>Целевая сумма ($ / руб):</label>
+            <input type="number" id="cont-target" value="200000" min="1">
+        </div>
+        <div class="input-group">
+            <label>Годовая ставка (%):</label>
+            <input type="number" id="cont-rate" value="10" step="0.1" min="0.1">
+        </div>
+        <button class="calc-btn" onclick="calcContinuous()">Рассчитать время</button>
+        <div id="res-2" class="result"></div>
+    </div>
+</div>
+
+<script>
+    function switchTab(index) {
+        document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+            btn.classList.toggle('active', i === index);
+        });
+        document.querySelectorAll('.calc-panel').forEach((panel, i) => {
+            panel.classList.toggle('active', i === index);
+        });
+    }
+
+    function showResult(elementId, text, isSuccess) {
+        const el = document.getElementById(elementId);
+        el.style.display = 'block';
+        el.className = `result ${isSuccess ? 'success' : 'error'}`;
+        el.innerText = text;
+    }
+
+    function calcCapital() {
+        const init = parseFloat(document.getElementById('cap-init').value);
+        const target = parseFloat(document.getElementById('cap-target').value);
+        const rate = parseFloat(document.getElementById('cap-rate').value);
+
+        if (target <= init) {
+            return showResult('res-0', 'Ошибка: Целевая сумма должна быть больше начальной.', false);
+        }
+
+        const r = rate / 100;
+        const years = Math.log(target / init) / Math.log(1 + r);
+        showResult('res-0', `Результат: капитал вырастет до цели за ${years.toFixed(2)} лет.`, true);
+    }
+
+    function calcLoan() {
+        const loan = parseFloat(document.getElementById('loan-amount').value);
+        const payment = parseFloat(document.getElementById('loan-payment').value);
+        const rate = parseFloat(document.getElementById('loan-rate').value);
+
+        const i = (rate / 100) / 12;
+
+        if (payment <= loan * i) {
+            return showResult('res-1', `Ошибка: Платеж слишком мал. Набегающие проценты составляют ${ (loan * i).toFixed(2) } ед./мес.`, false);
+        }
+
+        const months = -Math.log(1 - (loan * i) / payment) / Math.log(1 + i);
+        const years = months / 12;
+        showResult('res-1', `Результат: Кредит будет погашен за ${months.toFixed(1)} мес. (~${years.toFixed(1)} лет).`, true);
+    }
+
+    function calcContinuous() {
+        const init = parseFloat(document.getElementById('cont-init').value);
+        const target = parseFloat(document.getElementById('cont-target').value);
+        const rate = parseFloat(document.getElementById('cont-rate').value);
+
+        if (target <= init) {
+            return showResult('res-2', 'Ошибка: Целевая сумма должна быть больше начальной.', false);
+        }
+
+        const r = rate / 100;
+        const years = Math.log(target / init) / r;
+        showResult('res-2', `Результат: При непрерывном проценте цель будет достигнута за ${years.toFixed(2)} лет.`, true);
+    }
+</script>
+
+</body>
+</html>
